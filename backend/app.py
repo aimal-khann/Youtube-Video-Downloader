@@ -99,8 +99,8 @@ def get_video_info_endpoint(url: str = Query(..., description="YouTube video or 
         err_msg = str(e)
         if "Video unavailable" in err_msg:
             detail = "This video is unavailable (it may be private, deleted, or region-restricted)."
-        elif "Sign in to confirm" in err_msg:
-            detail = "This video requires age verification or login."
+        elif "Sign in to confirm" in err_msg or "bot" in err_msg.lower():
+            detail = "YouTube bot detection triggered on server IP. Add YOUTUBE_COOKIES to Railway Variables to bypass."
         else:
             detail = f"Unable to fetch video details: {err_msg[:200]}"
         raise HTTPException(status_code=400, detail=detail)

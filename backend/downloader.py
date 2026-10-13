@@ -48,6 +48,26 @@ def format_count(count: Optional[int]) -> str:
         return f"{count / 1_000:.1f}K"
     return str(count)
 
+COOKIE_FILE = "/tmp/cookies.txt" if os.path.exists("/tmp") else os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "cookies.txt"))
+
+def ensure_cookies():
+    """Extracts cookies from YOUTUBE_COOKIES environment variable if provided on Railway."""
+    cookies_env = os.environ.get("YOUTUBE_COOKIES")
+    if cookies_env:
+        try:
+            target_dir = os.path.dirname(COOKIE_FILE)
+            if target_dir and not os.path.exists(target_dir):
+                os.makedirs(target_dir, exist_ok=True)
+            with open(COOKIE_FILE, "w", encoding="utf-8") as f:
+                f.write(cookies_env.strip())
+            logger.info(f"Successfully loaded YouTube cookies from environment variable into {COOKIE_FILE}")
+            return COOKIE_FILE
+        except Exception as e:
+            logger.warning(f"Could not write YOUTUBE_COOKIES to {COOKIE_FILE}: {e}")
+    if os.path.exists(COOKIE_FILE) and os.path.getsize(COOKIE_FILE) > 0:
+        return COOKIE_FILE
+    return None
+
 def get_base_ydl_opts() -> Dict[str, Any]:
     ffmpeg_exe, ffprobe_exe, ffmpeg_dir = get_ffmpeg_paths()
     node_exe = shutil.which("node") or r"C:\Program Files\nodejs\node.exe"
@@ -60,18 +80,37 @@ def get_base_ydl_opts() -> Dict[str, Any]:
         opts["js_runtimes"] = {"node": {"path": node_exe}}
     if ffmpeg_dir:
         opts["ffmpeg_location"] = ffmpeg_dir
+
+    cookie_path = ensure_cookies()
+    if cookie_path and os.path.exists(cookie_path) and os.path.getsize(cookie_path) > 0:
+        opts["cookiefile"] = cookie_path
+
     return opts
 
 
 def extract_video_info(url: str) -> Dict[str, Any]:
     """
     Extracts video metadata and categorizes video and audio qualities.
+    Automatically falls back to mobile/embedded player clients if datacenter IP bot detection occurs.
     """
     opts = get_base_ydl_opts()
     opts["extract_flat"] = False
 
-    with yt_dlp.YoutubeDL(opts) as ydl:
-        info = ydl.extract_info(url, download=False)
+    try:
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+    except Exception as e:
+        err_str = str(e).lower()
+        if any(keyword in err_str for keyword in ("bot", "sign in", "confirm you", "429", "token")):
+            logger.info("Datacenter IP challenge detected on YouTube. Retrying with mobile player client...")
+            fallback_opts = dict(opts)
+            fallback_opts["extractor_args"] = {
+                "youtube": {"player_client": ["android", "ios", "mweb"]}
+            }
+            with yt_dlp.YoutubeDL(fallback_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+        else:
+            raise e
 
     duration = info.get("duration") or 0
     raw_formats = info.get("formats", [])
@@ -387,9 +426,23 @@ def execute_download(
 
         TASKS[task_id]["stage"] = "Connecting to YouTube stream..."
 
-        with yt_dlp.YoutubeDL(opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            # Find the actual downloaded file on disk
+        try:
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+        except Exception as e:
+            err_str = str(e).lower()
+            if any(keyword in err_str for keyword in ("bot", "sign in", "confirm you", "429", "token")):
+                logger.info(f"Bot challenge encountered for task {task_id}. Retrying with mobile clients...")
+                fallback_opts = dict(opts)
+                fallback_opts["extractor_args"] = {
+                    "youtube": {"player_client": ["android", "ios", "mweb"]}
+                }
+                with yt_dlp.YoutubeDL(fallback_opts) as ydl:
+                    info = ydl.extract_info(url, download=True)
+            else:
+                raise e
+
+        # Find the actual downloaded file on disk
             final_filename = None
             final_path = None
             

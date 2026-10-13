@@ -8,9 +8,11 @@ venv/
 .venv/
 env/
 
-# Ephemeral media cache (cleaned automatically)
+# Ephemeral media cache & cookies
 downloads/*
 !downloads/.gitkeep
+cookies.txt
+*.cookies
 
 # IDE / OS
 .vscode/

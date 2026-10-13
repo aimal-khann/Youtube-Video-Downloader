@@ -49,7 +49,13 @@ git push -u origin main
    - **FFmpeg**
    - **Node.js**
 5. Go to **Settings** -> **Networking** -> click **"Generate Domain"** to get your public HTTPS URL (e.g. `https://tubeflow-production.up.railway.app`).
-6. Your downloader is live on the internet! 🚀
+6. **(Recommended) Add YouTube Cookies to prevent bot blocks:**
+   - Datacenter cloud IPs (AWS, Railway, etc.) can trigger YouTube's *"Sign in to confirm you're not a bot"* protection.
+   - Install the **"Get cookies.txt LOCALLY"** Chrome/Firefox extension.
+   - Open YouTube while logged in, click the extension, and copy the cookies.
+   - In Railway, open your project -> **Variables** -> add a new variable named `YOUTUBE_COOKIES` and paste the copied text.
+   - Railway will restart automatically with full bot-bypass and full 1080p/4K unlocked!
+7. Your downloader is live on the internet! 🚀
 
 ---
 
