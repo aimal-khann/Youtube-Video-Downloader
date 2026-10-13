@@ -85,6 +85,13 @@ def get_base_ydl_opts() -> Dict[str, Any]:
     if cookie_path and os.path.exists(cookie_path) and os.path.getsize(cookie_path) > 0:
         opts["cookiefile"] = cookie_path
 
+    # Use modern visionos & web client to bypass broken tv_downgraded client reload errors
+    opts["extractor_args"] = {
+        "youtube": {
+            "player_client": ["visionos", "web"]
+        }
+    }
+
     return opts
 
 
@@ -101,11 +108,11 @@ def extract_video_info(url: str) -> Dict[str, Any]:
             info = ydl.extract_info(url, download=False)
     except Exception as e:
         err_str = str(e).lower()
-        if any(keyword in err_str for keyword in ("bot", "sign in", "confirm you", "429", "token")):
-            logger.info("Datacenter IP challenge detected on YouTube. Retrying with mobile player client...")
+        if any(keyword in err_str for keyword in ("bot", "sign in", "confirm you", "429", "token", "reload", "unplayable")):
+            logger.info("YouTube challenge/unplayable error detected. Retrying with mobile player client...")
             fallback_opts = dict(opts)
             fallback_opts["extractor_args"] = {
-                "youtube": {"player_client": ["android", "ios", "mweb"]}
+                "youtube": {"player_client": ["ios", "android", "mweb"]}
             }
             with yt_dlp.YoutubeDL(fallback_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
@@ -431,11 +438,11 @@ def execute_download(
                 info = ydl.extract_info(url, download=True)
         except Exception as e:
             err_str = str(e).lower()
-            if any(keyword in err_str for keyword in ("bot", "sign in", "confirm you", "429", "token")):
+            if any(keyword in err_str for keyword in ("bot", "sign in", "confirm you", "429", "token", "reload", "unplayable")):
                 logger.info(f"Bot challenge encountered for task {task_id}. Retrying with mobile clients...")
                 fallback_opts = dict(opts)
                 fallback_opts["extractor_args"] = {
-                    "youtube": {"player_client": ["android", "ios", "mweb"]}
+                    "youtube": {"player_client": ["ios", "android", "mweb"]}
                 }
                 with yt_dlp.YoutubeDL(fallback_opts) as ydl:
                     info = ydl.extract_info(url, download=True)
@@ -443,35 +450,35 @@ def execute_download(
                 raise e
 
         # Find the actual downloaded file on disk
-            final_filename = None
-            final_path = None
-            
-            # Look for file starting with task_id in DOWNLOAD_DIR
-            for fname in os.listdir(DOWNLOAD_DIR):
-                if fname.startswith(task_id):
-                    final_filename = fname[len(task_id) + 1:]  # strip task_id_ prefix for user display
-                    final_path = os.path.join(DOWNLOAD_DIR, fname)
-                    break
+        final_filename = None
+        final_path = None
+        
+        # Look for file starting with task_id in DOWNLOAD_DIR
+        for fname in os.listdir(DOWNLOAD_DIR):
+            if fname.startswith(task_id):
+                final_filename = fname[len(task_id) + 1:]  # strip task_id_ prefix for user display
+                final_path = os.path.join(DOWNLOAD_DIR, fname)
+                break
 
-            if not final_path or not os.path.exists(final_path):
-                # Fallback to prepare_filename
-                expected = ydl.prepare_filename(info)
-                if os.path.exists(expected):
-                    final_path = expected
-                    final_filename = os.path.basename(expected)
+        if not final_path or not os.path.exists(final_path):
+            # Fallback to prepare_filename
+            expected = ydl.prepare_filename(info)
+            if os.path.exists(expected):
+                final_path = expected
+                final_filename = os.path.basename(expected)
 
-            file_size = os.path.getsize(final_path) if final_path and os.path.exists(final_path) else 0
+        file_size = os.path.getsize(final_path) if final_path and os.path.exists(final_path) else 0
 
-            TASKS[task_id].update({
-                "status": "completed",
-                "stage": "Ready for download!",
-                "percent": 100.0,
-                "filename": final_filename or "youtube_media.mp4",
-                "file_path": final_path,
-                "file_size": file_size,
-                "file_size_str": format_bytes(file_size),
-            })
-            logger.info(f"Task {task_id} completed successfully: {final_path}")
+        TASKS[task_id].update({
+            "status": "completed",
+            "stage": "Ready for download!",
+            "percent": 100.0,
+            "filename": final_filename or "youtube_media.mp4",
+            "file_path": final_path,
+            "file_size": file_size,
+            "file_size_str": format_bytes(file_size),
+        })
+        logger.info(f"Task {task_id} completed successfully: {final_path}")
 
     except Exception as e:
         logger.exception(f"Error during download task {task_id}: {e}")
