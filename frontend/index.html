@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TubeFlow — High-Speed YouTube Video & Audio Downloader</title>
+  <meta name="description" content="Download YouTube videos in 4K, 1080p Full HD, or studio 320kbps MP3 audio directly in your browser. Fast, free, private, and zero ads.">
+  
+  <!-- Premium Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/styles.css?v=4.0">
+</head>
+<body>
+
+  <!-- Ambient background glow lights -->
+  <div class="ambient-glow-wrapper">
+    <div class="glow-orb orb-primary"></div>
+    <div class="glow-orb orb-secondary"></div>
+  </div>
+
+  <!-- App Wrapper -->
+  <div class="app-layout">
+    
+    <!-- Modern Minimalist Header -->
+    <header class="app-header">
+      <div class="header-container">
+        
+        <!-- Brand -->
+        <a href="/" class="header-brand">
+          <div class="brand-icon-wrapper">
+            <svg class="brand-logo" viewBox="0 0 28 28" fill="none">
+              <rect width="28" height="28" rx="8" fill="url(#brandGradient)"/>
+              <polygon points="11 8.5 19.5 14 11 19.5" fill="#ffffff"/>
+              <defs>
+                <linearGradient id="brandGradient" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#ff0033"/>
+                  <stop offset="100%" stop-color="#e50914"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="brand-info">
+            <span class="brand-name">TubeFlow</span>
+            <span class="brand-badge">PRO</span>
+          </div>
+        </a>
+
+        <!-- Header Actions -->
+        <div class="header-actions">
+          <div class="engine-indicator" id="engineStatusBadge" title="Engine operational">
+            <span class="indicator-dot"></span>
+            <span class="indicator-text">Cloud Engine Active</span>
+          </div>
+
+          <!-- Light/Dark Mode Switcher -->
+          <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleAppTheme()" aria-label="Toggle visual theme" title="Toggle theme">
+            <svg class="theme-icon-sun hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+      
+      <!-- Hero Section -->
+      <section class="hero-block">
+        <div class="hero-pill-badge">
+          <span class="pill-sparkle">✨</span>
+          <span>Ultra HD 4K & Studio MP3 Downloader</span>
+        </div>
+        <h1 class="hero-title">
+          Download YouTube in <span class="gradient-text">Highest Quality</span>
+        </h1>
+        <p class="hero-desc">
+          Fast, private, and effortless. Paste any YouTube video or Shorts link to download crisp 4K/1080p video or studio 320kbps MP3 directly to your device.
+        </p>
+      </section>
+
+      <!-- URL Search Bar -->
+      <section class="search-section">
+        <div class="search-card" id="urlBoxContainer">
+          <div class="search-icon-slot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          </div>
+          
+          <input 
+            type="text" 
+            id="videoUrlInput" 
+            class="search-input" 
+            placeholder="Paste YouTube link here... (e.g. https://www.youtube.com/watch?v=...)" 
+            autocomplete="off"
+            spellcheck="false"
+          >
+
+          <button class="search-paste-btn" id="pasteClipboardBtn" onclick="pasteFromClipboard()" title="Paste from clipboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+              <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+            </svg>
+            <span>Paste</span>
+          </button>
+
+          <button class="search-clear-btn hidden" id="clearInputBtn" onclick="clearUrlInput()" title="Clear input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+
+          <button class="search-submit-btn" id="fetchVideoBtn" onclick="fetchVideoInfo()">
+            <span class="btn-text">Analyze Video</span>
+            <div class="btn-spinner hidden" id="fetchSpinner"></div>
+          </button>
+        </div>
+
+        <!-- Quick Sample Link Chips -->
+        <div class="sample-chips-row">
+          <span class="samples-label">Quick samples:</span>
+          <button class="sample-chip" id="sampleLink1" onclick="loadSample('https://www.youtube.com/watch?v=dQw4w9WgXcQ')" data-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+            🎵 Music Video (Rick Astley 4K)
+          </button>
+          <button class="sample-chip" id="sampleLink2" onclick="loadSample('https://www.youtube.com/watch?v=jNQXAC9IVRw')" data-url="https://www.youtube.com/watch?v=jNQXAC9IVRw">
+            🎬 Classic Short (Me at the zoo)
+          </button>
+        </div>
+      </section>
+
+      <!-- Error Message Banner -->
+      <div class="alert-banner error-banner hidden" id="errorCard">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-content">
+          <strong class="alert-title" id="errorTitle">Unable to fetch video</strong>
+          <span class="alert-text" id="errorMsg">Please verify the link and try again.</span>
+        </div>
+        <button class="alert-close-btn" id="dismissErrorBtn" onclick="dismissErrorCard()">✕</button>
+      </div>
+
+      <!-- Result Card: Seamless, Unified, Zero Popups! -->
+      <section class="result-card-container hidden" id="resultSection">
+        <div class="downloader-card">
+          
+          <!-- Left: Media Preview -->
+          <div class="card-media-preview">
+            <div class="thumb-frame">
+              <img id="videoThumbImg" src="" alt="Video thumbnail" class="thumb-image">
+              <span class="thumb-duration" id="videoDurationBadge">00:00</span>
+              <span class="thumb-quality-tag" id="videoTopQualityBadge">HD</span>
+            </div>
+
+            <div class="media-info-block">
+              <h2 class="video-title" id="videoTitleText">Video Title Placeholder</h2>
+              
+              <div class="channel-info">
+                <span class="channel-avatar">👤</span>
+                <span class="channel-name" id="videoChannelName">Creator Name</span>
+                <span class="verified-check" title="Verified Creator">✓</span>
+              </div>
+
+              <div class="meta-stats-row">
+                <span class="stat-badge" id="videoViewsText">0 views</span>
+                <span class="stat-bullet">•</span>
+                <span class="stat-badge" id="videoDurationText">00:00</span>
+                <span class="stat-bullet">•</span>
+                <span class="stat-badge" id="videoDateText">Recent</span>
+              </div>
+
+              <a href="#" target="_blank" rel="noopener noreferrer" class="yt-link-out" id="videoExternalLink">
+                <span>View on YouTube</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Right: Controls & Direct Inline Progress Hub -->
+          <div class="card-download-controls">
+            
+            <div class="controls-header">
+              <div class="controls-header-text">
+                <span class="controls-heading">Download Options</span>
+                <span class="controls-hint">Pick format & resolution</span>
+              </div>
+            </div>
+
+            <!-- 1. Format Switcher: 2 Clean Options (Video vs Audio) -->
+            <div class="format-toggle-group">
+              <label class="section-label">1. Choose Format:</label>
+              <div class="toggle-pills-row" role="tablist">
+                <button class="toggle-pill active" id="tabVideoMode" onclick="switchMode('video')" data-mode="video" role="tab" aria-selected="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                  </svg>
+                  <span class="pill-label">Video (with Audio)</span>
+                </button>
+
+                <button class="toggle-pill" id="tabAudioMode" onclick="switchMode('audio')" data-mode="audio" role="tab" aria-selected="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                  </svg>
+                  <span class="pill-label">Audio Only (MP3)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Quality Selection: Clean Dropdown Menu -->
+            <div class="quality-select-group">
+              <div class="quality-label-row">
+                <label for="qualitySelect" class="section-label" id="qualityDropdownLabel">2. Select Quality:</label>
+                <span class="quality-tag-pill" id="selectedBadgeText">1080p FHD</span>
+              </div>
+
+              <div class="custom-select-wrapper">
+                <select id="qualitySelect" class="quality-dropdown" onchange="onQualityChange(this.value)">
+                  <!-- Populated dynamically via JS -->
+                </select>
+                <div class="select-chevron">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Selection summary preview snippet -->
+              <div class="quality-detail-strip" id="qualityDetailStrip">
+                <span class="strip-icon" id="stripIcon">ℹ️</span>
+                <span class="strip-text" id="stripDetails">High-definition video merged with crisp stereo audio via FFmpeg</span>
+              </div>
+            </div>
+
+            <!-- 3. Video Container Option (Shown in video mode) -->
+            <div class="container-option-row" id="containerPickerWrap">
+              <label class="section-sublabel">File Container:</label>
+              <div class="container-pill-select">
+                <label class="container-radio-label">
+                  <input type="radio" name="containerRadio" value="mp4" checked id="radioMp4" onchange="onContainerChange('mp4')">
+                  <span>MP4 (Universal)</span>
+                </label>
+                <label class="container-radio-label">
+                  <input type="radio" name="containerRadio" value="mkv" id="radioMkv" onchange="onContainerChange('mkv')">
+                  <span>MKV (Matroska)</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 4. Direct Action: Single Download CTA Button -->
+            <div class="cta-action-row" id="ctaRow">
+              <button class="primary-download-btn" id="startDownloadBtn" onclick="triggerDownload()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" class="download-icon">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span class="btn-main-text" id="downloadBtnText">Download Video</span>
+              </button>
+            </div>
+
+            <!-- 5. INLINE Live Download Progress Card (No annoying popup box!) -->
+            <div class="inline-progress-card hidden" id="inlineProgressBox">
+              <div class="progress-meta-header">
+                <div class="progress-title-col">
+                  <span class="progress-status-badge" id="progressStatusBadge">Downloading</span>
+                  <span class="progress-stage-desc" id="progressStageDesc">Connecting to media stream...</span>
+                </div>
+                <div class="progress-number-val" id="progressPercentNum">0%</div>
+              </div>
+
+              <!-- Animated Gradient Progress Bar -->
+              <div class="progress-bar-shell">
+                <div class="progress-bar-bar" id="progressFillBar" style="width: 0%"></div>
+              </div>
+
+              <!-- Real-time metrics grid -->
+              <div class="progress-stats-grid">
+                <div class="stat-cell">
+                  <span class="stat-cell-label">Speed</span>
+                  <span class="stat-cell-val" id="statSpeedVal">0 B/s</span>
+                </div>
+                <div class="stat-cell">
+                  <span class="stat-cell-label">ETA</span>
+                  <span class="stat-cell-val" id="statEtaVal">--:--</span>
+                </div>
+                <div class="stat-cell">
+                  <span class="stat-cell-label">Downloaded</span>
+                  <span class="stat-cell-val" id="statSizeVal">0 MB</span>
+                </div>
+              </div>
+
+              <!-- Completion State (In-place!) -->
+              <div class="inline-success-card hidden" id="inlineSuccessBox">
+                <div class="success-top-line">
+                  <div class="success-check-icon">✓</div>
+                  <div class="success-text-group">
+                    <h3 class="success-heading">Download Complete!</h3>
+                    <p class="success-desc" id="successFilenameText">Your file has been downloaded.</p>
+                  </div>
+                </div>
+
+                <div class="success-cta-actions">
+                  <a href="#" class="btn-save-again" id="downloadAgainBtn" download>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Download File Again</span>
+                  </a>
+                  <button class="btn-convert-another" onclick="resetDownloader()">
+                    <span>Convert Another</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- Highlights / Trust Features -->
+      <section class="features-section">
+        <div class="feature-card">
+          <div class="feature-icon-box">⚡</div>
+          <div class="feature-content">
+            <h3 class="feature-title">High-Speed Cloud Engine</h3>
+            <p class="feature-desc">Multi-threaded stream extraction powered by high-bandwidth cloud servers.</p>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-box">🎬</div>
+          <div class="feature-content">
+            <h3 class="feature-title">Full 4K & Lossless Audio</h3>
+            <p class="feature-desc">FFmpeg integration ensures lossless video remuxing and crisp 320kbps MP3 fidelity.</p>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon-box">🔒</div>
+          <div class="feature-content">
+            <h3 class="feature-title">Private & Secure</h3>
+            <p class="feature-desc">Zero tracking, zero history logs, and automatic temporary file purging.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Clean Footer -->
+    <footer class="app-footer">
+      <div class="footer-container">
+        <div class="footer-brand-line">
+          <strong>TubeFlow</strong> • Fast, Private YouTube Media Downloader
+        </div>
+        <div class="footer-sub-line">
+          Cloud-optimized for Railway • Intended strictly for personal archival use
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-stack" id="toastContainer"></div>
+
+  <!-- Application script with cache-busting -->
+  <script src="/app.js?v=4.0"></script>
+</body>
+</html>
