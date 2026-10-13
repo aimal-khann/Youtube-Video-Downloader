@@ -55,12 +55,27 @@ def ensure_cookies():
     cookies_env = os.environ.get("YOUTUBE_COOKIES")
     if cookies_env:
         try:
+            cookies_text = cookies_env.strip()
+            # Strip surrounding quotes if pasted with quotes
+            if (cookies_text.startswith('"') and cookies_text.endswith('"')) or (cookies_text.startswith("'") and cookies_text.endswith("'")):
+                cookies_text = cookies_text[1:-1].strip()
+            # Convert escaped newlines and tabs
+            if "\\n" in cookies_text and "\n" not in cookies_text:
+                cookies_text = cookies_text.replace("\\n", "\n")
+            if "\\t" in cookies_text and "\t" not in cookies_text:
+                cookies_text = cookies_text.replace("\\t", "\t")
+            # Ensure Netscape header
+            if not cookies_text.startswith("# Netscape"):
+                cookies_text = "# Netscape HTTP Cookie File\n" + cookies_text
+
             target_dir = os.path.dirname(COOKIE_FILE)
             if target_dir and not os.path.exists(target_dir):
                 os.makedirs(target_dir, exist_ok=True)
             with open(COOKIE_FILE, "w", encoding="utf-8") as f:
-                f.write(cookies_env.strip())
-            logger.info(f"Successfully loaded YouTube cookies from environment variable into {COOKIE_FILE}")
+                f.write(cookies_text.strip() + "\n")
+
+            valid_entries = [l for l in cookies_text.splitlines() if l.strip() and not l.startswith("#")]
+            logger.info(f"Loaded {len(valid_entries)} YouTube cookies into {COOKIE_FILE}")
             return COOKIE_FILE
         except Exception as e:
             logger.warning(f"Could not write YOUTUBE_COOKIES to {COOKIE_FILE}: {e}")
@@ -85,10 +100,10 @@ def get_base_ydl_opts() -> Dict[str, Any]:
     if cookie_path and os.path.exists(cookie_path) and os.path.getsize(cookie_path) > 0:
         opts["cookiefile"] = cookie_path
 
-    # Use modern visionos & web client to bypass broken tv_downgraded client reload errors
+    # Use visionos client only - bypasses datacenter IP bot detection and desktop web checks
     opts["extractor_args"] = {
         "youtube": {
-            "player_client": ["visionos", "web"]
+            "player_client": ["visionos"]
         }
     }
 
@@ -109,10 +124,10 @@ def extract_video_info(url: str) -> Dict[str, Any]:
     except Exception as e:
         err_str = str(e).lower()
         if any(keyword in err_str for keyword in ("bot", "sign in", "confirm you", "429", "token", "reload", "unplayable")):
-            logger.info("YouTube challenge/unplayable error detected. Retrying with mobile player client...")
+            logger.info("YouTube challenge detected. Retrying with mobile player client fallback...")
             fallback_opts = dict(opts)
             fallback_opts["extractor_args"] = {
-                "youtube": {"player_client": ["ios", "android", "mweb"]}
+                "youtube": {"player_client": ["android", "ios"]}
             }
             with yt_dlp.YoutubeDL(fallback_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
@@ -442,7 +457,7 @@ def execute_download(
                 logger.info(f"Bot challenge encountered for task {task_id}. Retrying with mobile clients...")
                 fallback_opts = dict(opts)
                 fallback_opts["extractor_args"] = {
-                    "youtube": {"player_client": ["ios", "android", "mweb"]}
+                    "youtube": {"player_client": ["android", "ios"]}
                 }
                 with yt_dlp.YoutubeDL(fallback_opts) as ydl:
                     info = ydl.extract_info(url, download=True)
